@@ -1,39 +1,31 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
+  import { browser } from '$app/environment'; 
 
   let canvas: HTMLCanvasElement;
   let ctx: CanvasRenderingContext2D;
-
   let animationFrame: number;
 
-  const baseColors = [
-    '#9caf88', // sage green
-    '#7b9453', // olive
-    '#d1b253', // mustard
-    '#d17842', // burnt orange
-    '#882b3f'  // wine red
-  ];
+  const baseColors = ['#9caf88', '#7b9453', '#d1b253', '#d17842', '#882b3f'];
   let colors = [...baseColors];
 
   let gridSize = 64;
-  let pixelSize = 10; // Se ajustará dinámicamente
+  let pixelSize = 10;
 
   function resizeCanvas() {
+    if (!browser || !canvas) return;
     const size = Math.min(window.innerWidth, window.innerHeight) * 0.9;
     canvas.width = size;
     canvas.height = size;
-
     pixelSize = size / gridSize;
-
     draw();
   }
 
   function draw() {
-    if (!ctx) return;
+    if (!ctx || !browser) return;
 
     const center = gridSize / 2;
     const radius = center;
-
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     ctx.save();
@@ -50,8 +42,6 @@
         if (dist < radius) {
           const ring = Math.floor((dist / radius) * colors.length);
           ctx.fillStyle = colors[ring] || '#000';
-
-          // Centrado en el canvas
           const px = x * pixelSize + (canvas.width - gridSize * pixelSize) / 2;
           const py = y * pixelSize + (canvas.height - gridSize * pixelSize) / 2;
           ctx.fillRect(px, py, pixelSize, pixelSize);
@@ -69,6 +59,7 @@
   }
 
   onMount(() => {
+    if (!browser) return;
     ctx = canvas.getContext('2d')!;
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
@@ -76,8 +67,10 @@
   });
 
   onDestroy(() => {
-    cancelAnimationFrame(animationFrame);
-    window.removeEventListener('resize', resizeCanvas);
+    if (browser) {
+      cancelAnimationFrame(animationFrame);
+      window.removeEventListener('resize', resizeCanvas);
+    }
   });
 </script>
 
